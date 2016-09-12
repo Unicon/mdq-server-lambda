@@ -27,5 +27,5 @@ On a clean AMI, run:
 
 ```
 sudo pip install --upgrade pip
-sudo yum install -y gcc libffi-devel openssl-devel
+sudo yum install -y gcc libffi-devel libxml2-devel libxslt-devel openssl-devel 
 ```

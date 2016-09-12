@@ -7,13 +7,14 @@ import decimal
 import signxml
 import sys
 import uuid
+import urllib2
 
 NSMAP = {None : "http://www.w3.org/2000/09/xmldsig#"}
 dynamodb = boto3.client('dynamodb')
 s3 = boto3.client('s3')
 
 def lambda_handler(event, context):
-    md = getFile('inc-metadata.xml')
+    md = urllib2.urlopen('http://python.org/').read()
     md_dom = etree.fromstring(md)
     md_root = md_dom.getroot()
 
@@ -74,6 +75,6 @@ def updateDynamoDb(entityId, provider, document):
     #    pass
 
 def getFile(filename):
-    s3.get_object(Bucket="mdq-server",Key=filename)
+    response = s3.get_object(Bucket="mdq-server", Key=filename)
     return response['Body'].read()
 

@@ -14,11 +14,23 @@ pip install -r misc/requirements.txt -t build/
 # Copy in local src
 cp -r src/* build/
 
+
+myvar="$PWD"
+virtualenv builder
+source ./builder/bin/activate
+pushd builder
+./bin/pip install cffi cryptography lxml
+pushd lib64/python2.7/site-packages/
+cp -r cffi* lxml* cryptography* $myvar/build
+popd
+popd
+deactivate
+
 # Build the archive.
 mkdir dist
 
 pushd build/
-zip -r ../dist/mdq-server.zip *
+zip -r9 ../dist/mdq-server.zip *
 popd
 
 rm -f setup.cfg
