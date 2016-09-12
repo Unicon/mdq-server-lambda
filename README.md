@@ -9,13 +9,13 @@ Lambda is particular about the version of .so files installed by pip. This requi
 
 From the project directory, run `./build`, then upon seeting `Updating AWS Lambda service`, hit `Ctrl+C`. 
 
-Then run:
+Then run (be sure to change the `<account-id>`):
 
 ```
 aws lambda create-function \
 --function-name reloadMetdata \
 --runtime python2.7 \
---role arn:aws:iam::996225510001:role/lambda_basic_execution \
+--role arn:aws:iam::<account-id>:role/lambda_basic_execution \
 --handler importInc.handler_name \
 --zip-file fileb://dist/mdq-server.zip
 ```

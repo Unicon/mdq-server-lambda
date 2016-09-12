@@ -12,7 +12,7 @@ rm -rf build/ dist/
 pip install -r misc/requirements.txt -t build/
 
 # Copy in local src
-cp -r src/ build/
+cp -r src/* build/
 
 # Build the archive.
 mkdir dist
@@ -23,7 +23,7 @@ popd
 
 rm -f setup.cfg
 
-echo "update AWS Lamba service"
+echo "Updating AWS Lamba service"
 
 aws lambda update-function-code \
 --function-name reloadMetadata \
