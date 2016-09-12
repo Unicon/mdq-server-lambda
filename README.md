@@ -21,3 +21,11 @@ aws lambda create-function \
 ```
 
 Upon sequent builds, `./build` can be used exclusively to push updates.
+
+# Preping an AMI 
+On a clean AMI, run:
+
+```
+sudo pip install --upgrade pip
+sudo yum install -y gcc libffi-devel openssl-devel
+```

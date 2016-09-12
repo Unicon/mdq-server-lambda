@@ -9,7 +9,7 @@ fi
 rm -rf build/ dist/
 
 # Pull down dependencies
-pip install -r src/requirements.txt -t build/
+pip install -r misc/requirements.txt -t build/
 
 # Copy in local src
 cp -r src/ build/
@@ -26,9 +26,9 @@ rm -f setup.cfg
 echo "update AWS Lamba service"
 
 aws lambda update-function-code \
---function-name reloadMetdata \
+--function-name reloadMetadata \
 --zip-file fileb://dist/mdq-server.zip
 
 #aws lambda update-function-code \
-#--function-name serverMetadata \
+#--function-name serveMetadata \
 #--zip-file fileb://dist/mdq-server.zip
