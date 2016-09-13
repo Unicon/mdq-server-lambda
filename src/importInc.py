@@ -60,7 +60,7 @@ def createDocument(fragment, id, validUntil):
     return etree.tostring(fragment, pretty_print=False, xml_declaration=True, encoding='UTF-8', standalone='no')    
 
 def updateDynamoDb(entityId, provider, document):
-    #try:
+    try:
         response = dynamodb.update_item(
             TableName='metadata',
             Key={"entityID": {"S": entityId} },
@@ -72,8 +72,8 @@ def updateDynamoDb(entityId, provider, document):
             })
 
         return response
-    #except botocore.exceptions.ClientError as e:
-    #    pass
+    except botocore.exceptions.ClientError as e:
+       print(e.message)
 
 def getFile(filename):
     response = s3.get_object(Bucket="mdq-server", Key=filename)
