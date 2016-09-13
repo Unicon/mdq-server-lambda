@@ -29,3 +29,41 @@ On a clean AMI, run:
 sudo pip install --upgrade pip
 sudo yum install -y gcc libffi-devel libxml2-devel libxslt-devel openssl-devel 
 ```
+
+Just to get this documented, seperate Lambda function for query:
+
+```
+from __future__ import print_function
+
+import boto3
+import json
+import urllib
+
+print('Loading function')
+
+def lambda_handler(event, context):
+    '''Provide an event that contains the following keys:
+
+      - operation: one of the operations in the operations dict below
+      - tableName: required for operations that interact with DynamoDB
+      - payload: a parameter to pass to the operation being performed
+    '''
+    entityId = event['params']['path']['entityId']
+    entityId = urllib.unquote(entityId)
+    print(entityId)
+    
+    dynamo = boto3.client('dynamodb')
+    
+    response = dynamo.get_item(
+        TableName='metadata',
+        Key={'entityID': {'S': entityId}},
+        AttributesToGet=['metadata']
+        )
+        
+    dum=response['Item']['metadata']['S']
+    print(dum)
+
+    return dum
+    
+    #    raise ValueError('Unrecognized operation "{}"'.format(operation))
+```

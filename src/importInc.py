@@ -1,5 +1,5 @@
-from copy import deepcopy
 from __future__ import print_function
+from copy import deepcopy
 from lxml import etree
 from urllib2 import urlopen
 
@@ -29,7 +29,7 @@ def lambda_handler(event, context):
         root = asserted_metadata.signed_xml
 
     except signxml.exceptions.InvalidSignature:
-        print "ERROR: signature validation failure"
+        print("ERROR: signature validation failure")
         sys.exit(5)
 
     id = root.attrib['ID']
