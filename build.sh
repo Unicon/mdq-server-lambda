@@ -15,13 +15,13 @@ pip install -r misc/requirements.txt -t build/
 cp -r src/* build/
 
 
-myvar="$PWD"
+pwd="$PWD"
 virtualenv builder
 source ./builder/bin/activate
 pushd builder
 ./bin/pip install cffi cryptography lxml
 pushd lib64/python2.7/site-packages/
-cp -r cffi* lxml* cryptography* $myvar/build
+cp -r cffi* lxml* cryptography* _cffi* $pwd/build
 popd
 popd
 deactivate

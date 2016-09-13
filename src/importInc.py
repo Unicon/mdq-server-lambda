@@ -1,5 +1,6 @@
 from copy import deepcopy
 from lxml import etree
+from urllib2 import urlopen
 
 import botocore
 import boto3
@@ -14,8 +15,8 @@ dynamodb = boto3.client('dynamodb')
 s3 = boto3.client('s3')
 
 def lambda_handler(event, context):
-    md = urllib2.urlopen('http://python.org/').read()
-    md_dom = etree.fromstring(md)
+    f = urlopen('http://md.incommon.org/InCommon/InCommon-metadata.xml')
+    md_dom = etree.parse(f)
     md_root = md_dom.getroot()
 
     md_cert_pem = getFile('inc-md-cert.pem')
@@ -56,7 +57,7 @@ def signFragment(fragment, key, cert):
     return signxml.XMLSigner().sign(fragment, key=key, cert=cert)
 
 def createDocument(fragment, id, validUntil):
-    return etree.tostring(fragment, pretty_print=True, xml_declaration=True, encoding='UTF-8', standalone='no')    
+    return etree.tostring(fragment, pretty_print=False, xml_declaration=True, encoding='UTF-8', standalone='no')    
 
 def updateDynamoDb(entityId, provider, document):
     #try:
