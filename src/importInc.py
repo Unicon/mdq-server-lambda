@@ -1,4 +1,5 @@
 from copy import deepcopy
+from __future__ import print_function
 from lxml import etree
 from urllib2 import urlopen
 
@@ -57,7 +58,9 @@ def signFragment(fragment, key, cert):
     return signxml.XMLSigner().sign(fragment, key=key, cert=cert)
 
 def createDocument(fragment, id, validUntil):
-    return etree.tostring(fragment, pretty_print=False, xml_declaration=True, encoding='UTF-8', standalone='no')    
+    doc = etree.tostring(fragment, pretty_print=False, xml_declaration=True, encoding="UTF-8", standalone="no")    
+    print("doc: " + doc)
+    return doc
 
 def updateDynamoDb(entityId, provider, document):
     try:
