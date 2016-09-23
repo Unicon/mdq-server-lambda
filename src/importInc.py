@@ -55,7 +55,7 @@ def createStandaloneFragment(node, validUntil):
 
 def signFragment(fragment, key, cert):
     fragment.insert(0, etree.Element("Signature", Id="placeholder", nsmap=NSMAP))
-    return signxml.XMLSigner().sign(fragment, key=key, cert=cert)
+    return signxml.XMLSigner(method=signxml.methods.enveloped, signature_algorithm=u'rsa-sha256', digest_algorithm=u'sha256', c14n_algorithm=u'http://www.w3.org/2001/10/xml-exc-c14n#').sign(fragment, key=key, cert=cert)
 
 def createDocument(fragment, id, validUntil):
     doc = etree.tostring(fragment, pretty_print=False, xml_declaration=True, encoding="UTF-8", standalone="no")    
