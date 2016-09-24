@@ -11,7 +11,6 @@ import hashlib
 import pytz
 import signxml
 import sys
-import uuid
 import urllib2
 
 NSMAP = {None : "http://www.w3.org/2000/09/xmldsig#"}
@@ -37,23 +36,23 @@ def lambda_handler(event, context):
         print("ERROR: signature validation failure")
         sys.exit(5)
 
-    id = root.attrib['ID']
     validUntil = root.attrib['validUntil']
 
     for item in root.iter("{urn:oasis:names:tc:SAML:2.0:metadata}EntityDescriptor"):
         
-        standalone = createStandaloneFragment(item, validUntil)
         entityId = item.attrib['entityID']
-
+        id = hashlib.md5(entityId).hexdigest()
+        standalone = createStandaloneFragment(item, id, validUntil)
+        
         xml = signFragment(standalone, our_key, our_cert)
-        doc = createDocument(xml, id, validUntil)
+        doc = createDocument(xml, validUntil)
         updateDynamoDb(entityId, "InCommon", doc)
  
     return 0
 
-def createStandaloneFragment(node, validUntil):
+def createStandaloneFragment(node, id, validUntil):
     copy = deepcopy(node)
-    copy.attrib['ID'] = str(uuid.uuid4())
+    copy.attrib['ID'] = id
     copy.attrib['cacheDuration'] = 'P0Y0M0DT6H0M0.000S'
     copy.attrib['validUntil'] = validUntil
     return copy
@@ -62,31 +61,32 @@ def signFragment(fragment, key, cert):
     fragment.insert(0, etree.Element("Signature", Id="placeholder", nsmap=NSMAP))
     return signxml.XMLSigner(method=signxml.methods.enveloped, signature_algorithm=u'rsa-sha256', digest_algorithm=u'sha256', c14n_algorithm=u'http://www.w3.org/2001/10/xml-exc-c14n#').sign(fragment, key=key, cert=cert)
 
-def createDocument(fragment, id, validUntil):
+def createDocument(fragment, validUntil):
     doc = etree.tostring(fragment, pretty_print=False, xml_declaration=True, encoding="UTF-8", standalone="no")    
-    print("doc: " + doc)
+    #print("doc: " + doc)
     return doc
 
 def updateDynamoDb(entityId, provider, document):
     try:
-        etag = haslib.md5().update(document).hexdigest()
+        etag = hashlib.md5(document).hexdigest()
         response = dynamodb.update_item(
             TableName='metadata',
             Key={"entityID": {"S": entityId} },
-            UpdateExpression='SET metadata=:metadata, provider=:provider, etag=:etag,last_updated=:last_updated',
+            UpdateExpression='SET metadata=:metadata, provider=:provider, etag=:etag,last_changed=:changed',
             ExpressionAttributeValues={
                 ":metadata" : {"S": document},
                 ":provider" : {"S": provider}, 
                 ":etag" : {"S" : etag},
                 ":changed" : {"N": str(seconds)}
             },
-            Expected={
-                "etag": {"Value": {"S": etag}, "ComparisonOperator" : "new"}
-            })
+            ConditionExpression="etag <> :etag"
+        )
 
         return response
     except botocore.exceptions.ClientError as e:
-       print(e.message)
+        if e.response['Error']['Code'] != 'ConditionalCheckFailedException':
+            print(e.message)
+       
 
 def getFile(filename):
     response = s3.get_object(Bucket="mdq-server", Key=filename)
