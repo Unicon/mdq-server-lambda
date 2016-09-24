@@ -5,7 +5,10 @@ from urllib2 import urlopen
 
 import botocore
 import boto3
+import datetime
 import decimal
+import hashlib
+import pytz
 import signxml
 import sys
 import uuid
@@ -14,6 +17,8 @@ import urllib2
 NSMAP = {None : "http://www.w3.org/2000/09/xmldsig#"}
 dynamodb = boto3.client('dynamodb')
 s3 = boto3.client('s3')
+
+seconds = (datetime.datetime.utcnow().replace(tzinfo=pytz.utc) - datetime.datetime(1970,1,1,tzinfo=pytz.utc)).total_seconds()
 
 def lambda_handler(event, context):
     f = urlopen('http://md.incommon.org/InCommon/InCommon-metadata.xml')
@@ -64,14 +69,19 @@ def createDocument(fragment, id, validUntil):
 
 def updateDynamoDb(entityId, provider, document):
     try:
+        etag = haslib.md5().update(document).hexdigest()
         response = dynamodb.update_item(
             TableName='metadata',
             Key={"entityID": {"S": entityId} },
-            UpdateExpression='SET metadata=:metadata, provider=:provider, last_updated=:last_updated',
+            UpdateExpression='SET metadata=:metadata, provider=:provider, etag=:etag,last_updated=:last_updated',
             ExpressionAttributeValues={
                 ":metadata" : {"S": document},
                 ":provider" : {"S": provider}, 
-                ":last_updated" : {"N": "5"}
+                ":etag" : {"S" : etag},
+                ":changed" : {"N": str(seconds)}
+            },
+            Expected={
+                "etag": {"Value": {"S": etag}, "ComparisonOperator" : "new"}
             })
 
         return response
