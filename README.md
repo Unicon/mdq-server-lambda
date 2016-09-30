@@ -44,26 +44,45 @@ print('Loading function')
 def lambda_handler(event, context):
     '''Provide an event that contains the following keys:
 
-      - operation: one of the operations in the operations dict below
-      - tableName: required for operations that interact with DynamoDB
-      - payload: a parameter to pass to the operation being performed
+      - params.path.entityId: the entityId of the requested entity.
+      - params.header.If-None-Match: a previously provided ETag to take advantage of caching.
     '''
-    entityId = event['params']['path']['entityId']
-    entityId = urllib.unquote(entityId)
-    print(entityId)
     
-    dynamo = boto3.client('dynamodb')
-    
-    response = dynamo.get_item(
-        TableName='metadata',
-        Key={'entityID': {'S': entityId}},
-        AttributesToGet=['metadata']
-        )
+    if 'params' in event and 'path' in event['params'] and 'entityId' in event['params']['path']:
+        entityId = event['params']['path']['entityId']
+        entityId = urllib.unquote(entityId)
+        print(entityId)
         
-    dum=response['Item']['metadata']['S']
-    print(dum)
-
-    return dum
+        inboundETag = ''
+        if 'header' in event['params'] and 'If-None-Match' in event['params']['header']:
+            #Striping single quotes until API Gateway Header JSON decoding issue fixed
+            inboundETag = event['params']['header']['If-None-Match'].replace('W/','').replace('"','').replace("'",'')
+            print(inboundETag)
     
-    #    raise ValueError('Unrecognized operation "{}"'.format(operation))
+        dynamo = boto3.client('dynamodb')
+    
+        response = dynamo.get_item(
+            TableName='metadata',
+            Key={'entityID': {'S': entityId}},
+            AttributesToGet=['metadata','etag']
+            )
+        if 'Item' not in response:
+            raise Exception('404')
+            
+        ETag = response['Item']['etag']['S']
+        print(ETag)
+        if inboundETag == ETag:
+            print("ETag matched")
+            raise Exception('304')
+        
+        metadata = response['Item']['metadata']['S']
+        #print(metadata)
+        
+        return { 'metadata' : metadata, 'headers' : { 'etag': 'W/"{0}"'.format(ETag)}, 'status': '200'}
+        #Using single quotes until API Gateway Header JSON decoding issue fixed
+        #return { 'metadata' : metadata, 'headers' : { 'etag': "W/'{0}'".format(ETag)}, 'status': '200'}
+    
+    else:
+        raise Exception('404')
+        
 ```
