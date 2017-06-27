@@ -1,0 +1,9 @@
+{
+    "keyBucket": "mdq-server",
+    "metadataUrl": "http://md.incommon.org/InCommon/InCommon-metadata.xml",
+    "providerName": "InCommon",
+    "providerSigningCert": "inc-md-cert.pem",
+    "ourSigningCert": "ours.pem",
+    "ourSigningKey": "ours.key",
+    "tableName": "metadata"
+}
