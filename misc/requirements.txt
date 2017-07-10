@@ -1,2 +1,5 @@
 pytz
 signxml
+moto
+coverage
+
