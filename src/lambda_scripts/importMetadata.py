@@ -25,6 +25,7 @@ URN = '{urn:oasis:names:tc:SAML:2.0:metadata}'
 def lambda_handler(event, context):
     """
     Updates a Dynamodb metadata table with a SAML metadata feed
+
     The event object MUST specify:
         - keyBucket: stores the signing validation certificate and signing key and certificate
         - metadataUrl: the url to load the metadata from
@@ -53,7 +54,6 @@ def lambda_handler(event, context):
     handle = urlopen(event['metadataUrl'])
     root = get_and_validate_metadata(handle.read(), md_cert_pem)
 
-    # TODO moved to own function
     success = store_metadata(root, event, our_key, our_cert)
 
     # TODO determine where this is going
@@ -101,14 +101,12 @@ def get_and_validate_metadata(metadata, md_cert_pem):
     :rtype: byte string
     """
 
-    # TODO using fromstring
     md_root = etree.fromstring(metadata)
 
     try:
         asserted_metadata = signxml.XMLVerifier().verify(md_root, x509_cert=md_cert_pem)
         root = asserted_metadata.signed_xml
 
-    # TODO added one more exception
     except signxml.exceptions.InvalidSignature:
         print("ERROR: signature validation failure")
         sys.exit(5)
@@ -135,8 +133,7 @@ def store_metadata(root, event, our_key, our_cert):
     :rtype: bool
     """
 
-    now = (datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-           - datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)).total_seconds()
+    now = (datetime.datetime.utcnow().replace(tzinfo=pytz.utc) - datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)).total_seconds()
 
     xml_signer = signxml.XMLSigner(method=signxml.methods.enveloped,
                                    signature_algorithm=u'rsa-sha256',
@@ -224,14 +221,13 @@ def update_dynamodb(entity_id, provider, document, timestamp):
     dynamo_db = get_dynamodb_client()
 
     try:
-        # TODO should there be a check to verify table is there?
         etag = hashlib.md5(document).hexdigest()
         response = dynamo_db.update_item(
             TableName='metadata',
             Key={"entityID": {"S": entity_id}},
             UpdateExpression='SET metadata=:metadata, provider=:provider, etag=:etag, last_changed=:changed, last_seen=:changed',
             ExpressionAttributeValues={
-                ":metadata": {"S": document.decode()},  # TODO addded decode since binary string before
+                ":metadata": {"S": document.decode()},
                 ":provider": {"S": provider},
                 ":etag": {"S": etag},
                 ":changed": {"N": str(timestamp)}
@@ -263,7 +259,6 @@ def read_file_from_s3(filename, bucket):
     :param bucket: S3 bucket to pull from
     :return: data from file
     """
-    # TODO added more exceptions
     s3 = get_s3_client()
     try:
         response = s3.get_object(Bucket=bucket, Key=filename)
@@ -280,7 +275,6 @@ def read_file_from_s3(filename, bucket):
     return response['Body'].read()
 
 
-# TODO added getters for testing
 def get_s3_client():
     return boto3.client('s3')
 
