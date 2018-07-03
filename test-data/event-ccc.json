@@ -1,0 +1,9 @@
+{
+    "keyBucket": "mdq-server",
+    "metadataUrl": "http://saml.cccmypath.org/metadata/ccc-metadata.xml",
+    "providerName": "CCC",
+    "providerSigningCert": "ccc-md-cert.pem",
+    "ourSigningCert": "ours.pem",
+    "ourSigningKey": "ours.key",
+    "tableName": "metadata"
+}

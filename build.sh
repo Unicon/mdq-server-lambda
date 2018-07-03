@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
 if [ "$(uname)" == "Darwin" ]; then
-    #Macs binaries in the build aren't really supported, but can be used for testing.
+    #Macs binaries in the build aren't really supported, but can be used for testing, so adding this file to help
     cp misc/setup.cfg .
 fi 
 
-# Remove previous builds
+echo "Remove previous builds"
 rm -rf build/ dist/
 
-# Pull down dependencies
+echo "Pull down general dependencies"
 pip install -r misc/requirements.txt -t build/
 
-# Copy in local src
+echo "Adding in source code"
 cp -r src/* build/
 
-
+echo "build platform specific dependencies that AWS needs"
 pwd="$PWD"
 virtualenv builder
 source ./builder/bin/activate
@@ -26,7 +26,7 @@ popd
 popd
 deactivate
 
-# Build the archive.
+echo "Building the archive"
 mkdir dist
 
 pushd build/
